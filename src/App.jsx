@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import './index.css';
 import MathExam from './components/MathExam';
 import SpellingExam from './components/SpellingExam';
+import ChessExam from './components/ChessExam';
 
 function App() {
-  const [activeTab, setActiveTab] = useState('math'); // 'math' or 'spelling'
+  const [activeTab, setActiveTab] = useState('math'); // 'math', 'spelling', or 'chess'
 
   return (
     <div className="app-container">
@@ -25,6 +26,12 @@ function App() {
         >
           📝 Spelling Exam
         </button>
+        <button 
+          className={`tab-btn ${activeTab === 'chess' ? 'active' : ''}`}
+          onClick={() => setActiveTab('chess')}
+        >
+          ♟️ Chess Game
+        </button>
       </div>
 
       <div className="tab-content">
@@ -33,6 +40,9 @@ function App() {
         </div>
         <div style={{ display: activeTab === 'spelling' ? 'block' : 'none' }}>
           <SpellingExam />
+        </div>
+        <div style={{ display: activeTab === 'chess' ? 'block' : 'none' }}>
+          <ChessExam />
         </div>
       </div>
     </div>

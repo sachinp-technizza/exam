@@ -14,6 +14,10 @@ function SpellingExam() {
   const [quizFinished, setQuizFinished] = useState(false);
   const [timeElapsed, setTimeElapsed] = useState(0);
 
+  // A randomized key to trick Bing's cache (or try to load a different thumbnail).
+  // Bing clusters results by query string, so appending a small random number might help shift the results slightly to provide a new image every session!
+  const imageKey = useMemo(() => Math.floor(Math.random() * 10), [currentIndex, sessionKey]);
+
   const inputRef = useRef(null);
   const currentWord = spellingWords[currentIndex];
 
@@ -34,9 +38,7 @@ function SpellingExam() {
 
   useEffect(() => {
     const handleGlobalKeydown = (e) => {
-      // If user isn't already focused on the input
       if (document.activeElement !== inputRef.current) {
-        // Only react to standard single printable characters 
         if (e.key.length === 1 && /[a-zA-Z]/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) {
           inputRef.current?.focus();
         }
@@ -152,6 +154,13 @@ function SpellingExam() {
     );
   }
 
+  // Construct a query string prioritizing child-friendly photos without text
+  const searchQuery = `${encodeURIComponent(currentWord)} real photography isolated -text -words -letters -written -sign -font ${imageKey}`;
+  const getBingThumbnailUrl = () => {
+    // Generate the Bing Image Thumbnail URL
+    return `https://tse1.mm.bing.net/th?q=${searchQuery}&w=400&h=400&c=7&rs=1&pid=1.7`;
+  };
+
   return (
     <div className="exam-container">
       <h2>Spelling Adventure</h2>
@@ -164,6 +173,27 @@ function SpellingExam() {
       <div className="card">
         {feedback && <Feedback type={feedback} />}
         
+        <div className="word-image-container" style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
+           {currentWord && (
+             <img 
+               key={currentWord + imageKey} // Force reload of the image tag when word/key changes
+               src={getBingThumbnailUrl()} 
+               alt={`Visual definition for current spelling word`} 
+               style={{ 
+                 width: '240px', 
+                 height: '240px', 
+                 objectFit: 'cover', 
+                 borderRadius: '24px', 
+                 boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
+                 backgroundColor: '#f8f9fa' // placeholder while loading
+               }}
+               onError={(e) => { 
+                 e.target.style.display = 'none'; // hide broken images seamlessly 
+               }}
+             />
+           )}
+        </div>
+
         <div className="spelling-controls" style={{ marginBottom: '2rem' }}>
           <button className="listen-btn" type="button" onClick={handleRepeat} aria-label="Listen to word again" style={{ fontSize: '3rem', cursor: 'pointer', padding: '1rem' }}>
             🔊
@@ -191,10 +221,10 @@ function SpellingExam() {
         </form>
 
         <div className="nav-buttons" style={{ marginTop: '2rem' }}>
-          <button onClick={handleBack} disabled={currentIndex === 0 || !!feedback}>
+          <button type="button" onClick={handleBack} disabled={currentIndex === 0 || !!feedback}>
             ← Back
           </button>
-          <button onClick={handleNext} disabled={!!feedback}>
+          <button type="button" onClick={handleNext} disabled={!!feedback}>
             Skip →
           </button>
         </div>

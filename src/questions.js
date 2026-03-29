@@ -2,15 +2,26 @@ export const getQuestions = () => {
   // Generate 20 questions
   const qs = [];
   const emojis = ['⚽', '🍎', '🏀', '🧸', '🐶'];
+  const generatedTexts = new Set();
+
+  function addQuestion(q) {
+    if (!generatedTexts.has(q.text)) {
+      generatedTexts.add(q.text);
+      qs.push(q);
+      return true;
+    }
+    return false;
+  }
 
   // Q 1-4: Object addition (e.g. 2 balls + 3 balls)
-  for(let i=0; i<4; i++) {
+  while(qs.length < 4) {
     const a = Math.floor(Math.random() * 4) + 1; // 1 to 4
     const b = Math.floor(Math.random() * 4) + 1; // 1 to 4
     const answer = a + b;
-    const emoji = emojis[i % emojis.length];
-    qs.push({ 
-      id: i+1, 
+    const emoji = emojis[qs.length % emojis.length];
+    
+    addQuestion({ 
+      id: qs.length + 1, 
       type: 'object_addition', 
       a, b, emoji, 
       text: `${a} + ${b} = ?`, 
@@ -18,27 +29,35 @@ export const getQuestions = () => {
       answer
     });
   }
+
   // Q 5-7: Simple text addition
-  for(let i=4; i<7; i++) {
+  while(qs.length < 7) {
     const a = Math.floor(Math.random() * 5) + 1;
     const b = Math.floor(Math.random() * 5) + 1;
     const answer = a + b;
-    qs.push({ id: i+1, type: 'addition', text: `${a} + ${b} = ?`, options: generateOptions(answer), answer});
+    addQuestion({ id: qs.length + 1, type: 'addition', text: `${a} + ${b} = ?`, options: generateOptions(answer), answer});
   }
+
   // Q 8-14: Simple subtraction (e.g. 5 - 2)
-  for(let i=0; i<7; i++) {
-    const a = Math.floor(Math.random() * 5) + 5; // 5 to 9
-    const b = Math.floor(Math.random() * 4) + 1; // 1 to 4
+  while(qs.length < 14) {
+    let a = Math.floor(Math.random() * 5) + 5; // 5 to 9
+    let b = Math.floor(Math.random() * 4) + 1; // 1 to 4
+    // Ensure b is less than a
+    if(b >= a) {
+      b = a - 1;
+    }
     const answer = a - b;
-    qs.push({ id: 7+i+1, type: 'subtraction', text: `${a} - ${b} = ?`, options: generateOptions(answer), answer});
+    addQuestion({ id: qs.length + 1, type: 'subtraction', text: `${a} - ${b} = ?`, options: generateOptions(answer), answer});
   }
+
   // Q 15-20: Missing numbers (e.g. 5 + ? = 9) or slightly harder addition
-  for(let i=0; i<6; i++) {
+  while(qs.length < 20) {
     const a = Math.floor(Math.random() * 5) + 5; // 5 to 9
     const ans = Math.floor(Math.random() * 5) + 1; // 1 to 5
     const total = a + ans;
-    qs.push({ id: 14+i+1, type: 'missing', text: `${a} + ? = ${total}`, options: generateOptions(ans), answer: ans});
+    addQuestion({ id: qs.length + 1, type: 'missing', text: `${a} + ? = ${total}`, options: generateOptions(ans), answer: ans});
   }
+  
   return qs;
 };
 
@@ -47,7 +66,7 @@ function generateOptions(correctAnswer) {
   while(opts.size < 4) {
     const offset = Math.floor(Math.random() * 5) - 2; // -2 to +2
     const fake = correctAnswer + offset;
-    if (fake > 0 && fake !== correctAnswer) {
+    if (fake >= 0 && fake !== correctAnswer) {
       opts.add(fake);
     } else {
       opts.add(correctAnswer + Math.floor(Math.random() * 4) + 1);
